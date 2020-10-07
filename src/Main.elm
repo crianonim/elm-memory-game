@@ -44,17 +44,17 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { cards = Array.fromList [ 1, 2, 3, 3, 1, 2 ]
+    ( resetModel
+    , Cmd.none
+    )
+
+resetModel = { cards = Array.fromList [ 1, 2, 3, 3, 1, 2 ]
       , guessed = Set.empty
       , match = False
       , selected = SelectedNone
       , allGuessed = False
       , score = 0
       }
-    , Cmd.none
-    )
-
-
 
 -- UPDATE
 
@@ -62,8 +62,8 @@ init _ =
 type Msg
     = OpenCard Int
     | CheckCards
-    | ClearSelection
-    | RemoveMatched
+    | Reset
+   
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -84,7 +84,7 @@ update msg model =
                                 SelectedTwo x i
 
                         SelectedTwo x y ->
-                            SelectedTwo x y
+                            SelectedOne i
                  , score = model.score+1
             }
                 |> update CheckCards
@@ -109,17 +109,7 @@ update msg model =
                         _ ->
                             False
               in
-              { model
-                | match = matched
-              }
-            , Cmd.none
-            )
-
-        ClearSelection ->
-            { model | selected = SelectedNone } |> update CheckCards
-
-        RemoveMatched ->
-            if model.match then
+              if matched then
                 let
                     newGuessed : Set Int
                     newGuessed =
@@ -143,7 +133,13 @@ update msg model =
                 )
 
             else
-                ( model, Cmd.none )
+                ( model, Cmd.none ))
+           
+
+        
+        
+        Reset -> (resetModel, Cmd.none)
+        
 
 
 
@@ -173,8 +169,8 @@ view model =
                     "No match!"
                 )
             ]
-        , button [ onClick ClearSelection ] [ text "Clear" ]
-        , button [ onClick RemoveMatched ] [ text "Guess" ]
+      
+       
         , p []
             [ text
                 (if model.allGuessed then
@@ -184,6 +180,10 @@ view model =
                     ""
                 )
             ]
+        , button [ onClick Reset]
+           [
+               text "Start Again!"
+           ]
         ]
 
 

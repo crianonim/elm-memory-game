@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, button, div, p, pre, text)
+import Html exposing (Html, a, button, div, p, pre, text)
 import Html.Attributes exposing (selected)
 import Html.Events exposing (onClick)
 import Platform.Cmd exposing (Cmd)
@@ -48,14 +48,32 @@ init _ =
     , Cmd.none
     )
 
-resetModel = { cards = Array.fromList [ 1, 2, 3, 3, 1, 2 ]
-      , guessed = Set.empty
-      , match = False
-      , selected = SelectedNone
-      , allGuessed = False
-      , score = 0
-      }
 
+resetModel =
+    { cards = shuffle [(0, 3),(1,4)] (Array.fromList [ 1, 1, 2, 2, 3, 3 ])
+    , guessed = Set.empty
+    , match = False
+    , selected = SelectedNone
+    , allGuessed = False
+    , score = 0
+    }
+
+
+swapIndexes : (Int, Int) -> Array x -> Array x
+swapIndexes (i1, i2) a = case ( Array.get i1 a, Array.get i2 a ) of
+            ( Just n1, Just n2 ) ->
+                Array.set i1 n2 (Array.set i2 n1 a)
+            _ ->
+                a
+
+shuffle: List (Int,Int) -> Array x -> Array x
+-- shuffle s a = case  List.head (List.reverse (List.map (\t->swapIndexes t a) s )) of
+--                      Just x -> x
+--                      Nothing -> a
+-- shuffle s a = List.foldl (\(pair,curr) -> shuffle pair curr  ) a s 
+shuffle s a = List.foldl swapIndexes a s 
+
+-- shuffle s a = List.map (\t->swapIndexes t a) s
 -- UPDATE
 
 
@@ -63,7 +81,6 @@ type Msg
     = OpenCard Int
     | CheckCards
     | Reset
-   
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -85,12 +102,12 @@ update msg model =
 
                         SelectedTwo x y ->
                             SelectedOne i
-                 , score = model.score+1
+                , score = model.score + 1
             }
                 |> update CheckCards
 
         CheckCards ->
-            ( let
+            let
                 matched =
                     case model.selected of
                         SelectedTwo x y ->
@@ -108,8 +125,8 @@ update msg model =
 
                         _ ->
                             False
-              in
-              if matched then
+            in
+            if matched then
                 let
                     newGuessed : Set Int
                     newGuessed =
@@ -133,13 +150,10 @@ update msg model =
                 )
 
             else
-                ( model, Cmd.none ))
-           
+                ( model, Cmd.none )
 
-        
-        
-        Reset -> (resetModel, Cmd.none)
-        
+        Reset ->
+            ( resetModel, Cmd.none )
 
 
 
@@ -169,8 +183,6 @@ view model =
                     "No match!"
                 )
             ]
-      
-       
         , p []
             [ text
                 (if model.allGuessed then
@@ -180,10 +192,9 @@ view model =
                     ""
                 )
             ]
-        , button [ onClick Reset]
-           [
-               text "Start Again!"
-           ]
+        , button [ onClick Reset ]
+            [ text "Start Again!"
+            ]
         ]
 
 

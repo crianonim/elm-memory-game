@@ -37,7 +37,8 @@ type alias Model =
     , guessed : Set Int
     , selected : Selected
     , match : Bool
-    , allGuessed: Bool
+    , allGuessed : Bool
+    , score : Int
     }
 
 
@@ -48,6 +49,7 @@ init _ =
       , match = False
       , selected = SelectedNone
       , allGuessed = False
+      , score = 0
       }
     , Cmd.none
     )
@@ -83,6 +85,7 @@ update msg model =
 
                         SelectedTwo x y ->
                             SelectedTwo x y
+                 , score = model.score+1
             }
                 |> update CheckCards
 
@@ -126,7 +129,9 @@ update msg model =
 
                             _ ->
                                 model.guessed
-                    allGuessed = (Set.size newGuessed) == (Array.length model.cards)
+
+                    allGuessed =
+                        Set.size newGuessed == Array.length model.cards
                 in
                 ( { model
                     | match = False
@@ -157,7 +162,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] (Array.indexedMap (viewButton model.selected model.guessed) model.cards |> Array.toList)
+        [ p [] [ text ("Score: " ++ String.fromInt model.score) ]
+        , div [] (Array.indexedMap (viewButton model.selected model.guessed) model.cards |> Array.toList)
         , p []
             [ text
                 (if model.match then
@@ -169,8 +175,15 @@ view model =
             ]
         , button [ onClick ClearSelection ] [ text "Clear" ]
         , button [ onClick RemoveMatched ] [ text "Guess" ]
-        , p [] [ text (if model.allGuessed then "You won!" else "")]
+        , p []
+            [ text
+                (if model.allGuessed then
+                    "You won!"
 
+                 else
+                    ""
+                )
+            ]
         ]
 
 
@@ -180,7 +193,7 @@ viewButton selected guessed idx v =
         [ button [ onClick (OpenCard idx) ]
             [ text
                 (if Set.member idx guessed then
-                    " " 
+                    " "
 
                  else
                     case selected of

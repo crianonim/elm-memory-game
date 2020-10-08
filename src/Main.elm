@@ -7,7 +7,7 @@ import Html.Attributes exposing (selected)
 import Html.Events exposing (onClick)
 import Platform.Cmd exposing (Cmd)
 import Set exposing (Set)
-
+import Random
 
 
 -- MAIN
@@ -45,15 +45,17 @@ type alias Model =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( resetModel
-    , Cmd.none
+    , Random.generate GotRandom randomPicker
     )
 
 cardsCount = 2
 
 generateCards x = List.concat( List.map (\y->[y,y]) (List.range 0 x))
 
+randomPicker: Random.Generator (List (Int,Int))
+randomPicker = Random.list (cardsCount*2) (Random.pair (Random.int 0 (cardsCount*2)) (Random.int 0 (cardsCount*2)))
 resetModel =
-    { cards = shuffle [ ( 0, 3 ), ( 1, 4 ) ] (Array.fromList (generateCards cardsCount))
+    { cards =  (Array.fromList (generateCards cardsCount))
     , guessed = Set.empty
     , match = False
     , selected = SelectedNone
@@ -85,6 +87,7 @@ type Msg
     = OpenCard Int
     | CheckCards
     | Reset
+    | GotRandom (List (Int,Int))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -157,9 +160,9 @@ update msg model =
                 ( model, Cmd.none )
 
         Reset ->
-            ( resetModel, Cmd.none )
+            ( resetModel, Random.generate GotRandom randomPicker )
 
-
+        GotRandom y -> ({model|cards=shuffle y model.cards} ,Cmd.none)
 
 -- SUBSCRIPTIONS
 
@@ -214,7 +217,7 @@ viewButton selected guessed idx v =
                     case selected of
                         SelectedNone ->
                             "X"
-
+                        --    String.fromInt v -- to debug
                         SelectedOne x ->
                             if x == idx then
                                 String.fromInt v

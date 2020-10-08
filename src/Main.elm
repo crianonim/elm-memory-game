@@ -48,9 +48,12 @@ init _ =
     , Cmd.none
     )
 
+cardsCount = 2
+
+generateCards x = List.concat( List.map (\y->[y,y]) (List.range 0 x))
 
 resetModel =
-    { cards = shuffle [(0, 3),(1,4)] (Array.fromList [ 1, 1, 2, 2, 3, 3 ])
+    { cards = shuffle [ ( 0, 3 ), ( 1, 4 ) ] (Array.fromList (generateCards cardsCount))
     , guessed = Set.empty
     , match = False
     , selected = SelectedNone
@@ -59,21 +62,22 @@ resetModel =
     }
 
 
-swapIndexes : (Int, Int) -> Array x -> Array x
-swapIndexes (i1, i2) a = case ( Array.get i1 a, Array.get i2 a ) of
-            ( Just n1, Just n2 ) ->
-                Array.set i1 n2 (Array.set i2 n1 a)
-            _ ->
-                a
+swapIndexes : ( Int, Int ) -> Array x -> Array x
+swapIndexes ( i1, i2 ) a =
+    case ( Array.get i1 a, Array.get i2 a ) of
+        ( Just n1, Just n2 ) ->
+            Array.set i1 n2 (Array.set i2 n1 a)
 
-shuffle: List (Int,Int) -> Array x -> Array x
--- shuffle s a = case  List.head (List.reverse (List.map (\t->swapIndexes t a) s )) of
---                      Just x -> x
---                      Nothing -> a
--- shuffle s a = List.foldl (\(pair,curr) -> shuffle pair curr  ) a s 
-shuffle s a = List.foldl swapIndexes a s 
+        _ ->
+            a
 
--- shuffle s a = List.map (\t->swapIndexes t a) s
+
+shuffle : List ( Int, Int ) -> Array x -> Array x
+shuffle s a =
+    List.foldl swapIndexes a s
+
+
+
 -- UPDATE
 
 

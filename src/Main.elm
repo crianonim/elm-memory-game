@@ -87,7 +87,7 @@ resetModel x =
     , selected = SelectedNone
     , allGuessed = False
     , score = 0
-    , cardFace = StringCardFace "Spanish"
+    , cardFace = StringCardFace "Names"
     }
 
 
@@ -304,17 +304,33 @@ stringLists =
     Dict.fromList
         [ ( "Capitals", flattenToArray [ ( "Poland", "Warsaw" ), ( "France", "Paris" ), ( "UK", "London" ), ( "Germany", "Berlin" ) ] )
         , ( "Spanish", flattenToArray [ ( "aqua", "water" ), ( "fuego", "flame" ), ( "hola", "hello" ), ( "si", "yes" ) ] )
+        , ( "Names", doubleAndToArray [ "Jan", "Lucas", "Ewa", "Kasia" ] )
         ]
 
-flattenToArray: List (String,String) -> Array String
-flattenToArray listOfPairs = Array.fromList (List.concat (List.map (\(x,y)->[x,y]) listOfPairs))
+
+flattenToArray : List ( String, String ) -> Array String
+flattenToArray listOfPairs =
+    Array.fromList (List.concat (List.map (\( x, y ) -> [ x, y ]) listOfPairs))
+
+
+doubleAndToArray : List x -> Array x
+doubleAndToArray listOfFaces =
+    Array.fromList (List.concat (List.map (\x -> [ x, x ]) listOfFaces))
+
 
 viewFace cardFace v =
     case cardFace of
         IndexCardFace ->
             String.fromInt (valueFromId v)
 
-        StringCardFace stringList ->  case Dict.get stringList stringLists of
-           Just correctList ->Maybe.withDefault "BAD" (Array.get v correctList)
-           Nothing -> "--ERROR--"
-            -- Maybe.withDefault "BAD" (Array.get v (Array.fromList [ "Poland", "Warsaw", "France", "Paris", "UK", "London", "Germany", "Berlin" ]))
+        StringCardFace stringList ->
+            case Dict.get stringList stringLists of
+                Just correctList ->
+                    Maybe.withDefault "BAD" (Array.get v correctList)
+
+                Nothing ->
+                    "--ERROR--"
+
+
+
+-- Maybe.withDefault "BAD" (Array.get v (Array.fromList [ "Poland", "Warsaw", "France", "Paris", "UK", "London", "Germany", "Berlin" ]))

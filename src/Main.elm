@@ -87,7 +87,7 @@ resetModel x =
     , selected = SelectedNone
     , allGuessed = False
     , score = 0
-    , cardFace = StringCardFace "Names"
+    , cardFace = StringCardFace "Spanish"
     }
 
 
@@ -308,7 +308,7 @@ stringLists =
         ]
 
 
-flattenToArray : List ( String, String ) -> Array String
+flattenToArray : List ( x, x ) -> Array x
 flattenToArray listOfPairs =
     Array.fromList (List.concat (List.map (\( x, y ) -> [ x, y ]) listOfPairs))
 

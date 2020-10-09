@@ -3,7 +3,7 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser
 import Dict
-import Html exposing (Html, a, button, div, input, p, pre, text)
+import Html exposing (Html, a, button, div, img, input, p, pre, text)
 import Html.Attributes exposing (selected, value)
 import Html.Events exposing (onClick, onInput)
 import Platform.Cmd exposing (Cmd)
@@ -49,6 +49,7 @@ type alias Model =
 type CardFace
     = IndexCardFace
     | StringCardFace String
+    | ImgCardFace String
 
 
 defaultCardNumber =
@@ -87,7 +88,7 @@ resetModel x =
     , selected = SelectedNone
     , allGuessed = False
     , score = 0
-    , cardFace = StringCardFace "Spanish"
+    , cardFace = ImgCardFace "Github"
     }
 
 
@@ -258,46 +259,43 @@ viewButton : Selected -> Set Int -> CardFace -> Int -> Int -> Html Msg
 viewButton selected guessed cardFace idx v =
     div []
         [ div [ onClick (OpenCard idx) ]
-            [ text
-                (if Set.member idx guessed then
-                    if debug == False then
-                        " "
+            [ (if Set.member idx guessed then
+                viewFace cardFace v
 
-                    else
-                        "+ " ++ viewFace cardFace v
+               else
+                case selected of
+                    SelectedNone ->
+                        "https://avatars3.githubusercontent.com/u/15275588?s=400&v=4"
 
-                 else
-                    case selected of
-                        SelectedNone ->
-                            if debug == False then
-                                "X"
+                    -- viewFace cardFace v
+                    --    String.fromInt v -- to debug
+                    SelectedOne x ->
+                        if x == idx then
+                            viewFace cardFace v
 
-                            else
-                                "- " ++ viewFace cardFace v
+                        else
+                            "https://avatars3.githubusercontent.com/u/15275588?s=400&v=4"
 
-                        --    String.fromInt v -- to debug
-                        SelectedOne x ->
-                            if x == idx then
-                                viewFace cardFace v
+                    SelectedTwo x y ->
+                        if x == idx || y == idx then
+                            viewFace cardFace v
 
-                            else if debug == False then
-                                "X"
+                        else
+                            "https://avatars3.githubusercontent.com/u/15275588?s=400&v=4"
+              )
+                |> (case cardFace of
+                        ImgCardFace x ->
+                            showImg
 
-                            else
-                                "- " ++ viewFace cardFace v
-
-                        SelectedTwo x y ->
-                            if x == idx || y == idx then
-                                viewFace cardFace v
-
-                            else if debug == False then
-                                "X"
-
-                            else
-                                "- " ++ viewFace cardFace v
-                )
+                        _ ->
+                            text
+                   )
             ]
         ]
+
+
+showImg s =
+    img [ Html.Attributes.src s ] []
 
 
 stringLists =
@@ -305,6 +303,20 @@ stringLists =
         [ ( "Capitals", flattenToArray [ ( "Poland", "Warsaw" ), ( "France", "Paris" ), ( "UK", "London" ), ( "Germany", "Berlin" ) ] )
         , ( "Spanish", flattenToArray [ ( "aqua", "water" ), ( "fuego", "flame" ), ( "hola", "hello" ), ( "si", "yes" ) ] )
         , ( "Names", doubleAndToArray [ "Jan", "Lucas", "Ewa", "Kasia" ] )
+        ]
+
+
+picsLists =
+    Dict.fromList
+        [ ( "Github"
+          , doubleAndToArray
+                [ "https://avatars1.githubusercontent.com/u/1197854?s=400&u=c24dd31b89b1b9f035368dec44948c2d03828a8d&v=4"
+                , "https://avatars0.githubusercontent.com/u/5942539?s=400&u=cd921bcb4886c0aa68692bb4c24c4dd20d05a949&v=4"
+                , "https://avatars2.githubusercontent.com/u/17748441?s=400&u=ffe398923e87e80206af2268ac37341a2817a3d0&v=4"
+                , "https://avatars0.githubusercontent.com/u/59838385?s=400&u=dea71e1e51c13242bc1e7fc5be82b3785c8ca909&v=4"
+                , "https://avatars0.githubusercontent.com/u/19223482?s=400&u=317e1ab608e1c78eeac579541304990b288e9fdc&v=4"
+                ]
+          )
         ]
 
 
@@ -325,6 +337,14 @@ viewFace cardFace v =
 
         StringCardFace stringList ->
             case Dict.get stringList stringLists of
+                Just correctList ->
+                    Maybe.withDefault "BAD" (Array.get v correctList)
+
+                Nothing ->
+                    "--ERROR--"
+
+        ImgCardFace imgList ->
+            case Dict.get imgList picsLists of
                 Just correctList ->
                     Maybe.withDefault "BAD" (Array.get v correctList)
 

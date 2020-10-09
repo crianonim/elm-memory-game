@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
+import Dict
 import Html exposing (Html, a, button, div, input, p, pre, text)
 import Html.Attributes exposing (selected, value)
 import Html.Events exposing (onClick, onInput)
@@ -41,13 +42,13 @@ type alias Model =
     , match : Bool
     , allGuessed : Bool
     , score : Int
-    , cardFace: CardFace
+    , cardFace : CardFace
     }
 
 
 type CardFace
     = IndexCardFace
-    | StringCardFace
+    | StringCardFace String
 
 
 defaultCardNumber =
@@ -65,8 +66,12 @@ init _ =
     )
 
 
-generateCards x =List.range 0 ((x*2) - 1)
-    -- List.concat (List.map (\y -> [ y, y ]) (List.range 0 (x - 1)))
+generateCards x =
+    List.range 0 ((x * 2) - 1)
+
+
+
+-- List.concat (List.map (\y -> [ y, y ]) (List.range 0 (x - 1)))
 
 
 randomPicker : Int -> Random.Generator (List ( Int, Int ))
@@ -82,7 +87,7 @@ resetModel x =
     , selected = SelectedNone
     , allGuessed = False
     , score = 0
-    , cardFace = StringCardFace
+    , cardFace = StringCardFace "Spanish"
     }
 
 
@@ -100,7 +105,11 @@ shuffle : List ( Int, Int ) -> Array x -> Array x
 shuffle s a =
     List.foldl swapIndexes a s
 
-valueFromId x = x // 2
+
+valueFromId x =
+    x // 2
+
+
 
 -- UPDATE
 
@@ -151,7 +160,7 @@ update msg model =
                                             False
 
                                         Just second ->
-                                          valueFromId  first == valueFromId second
+                                            valueFromId first == valueFromId second
 
                         _ ->
                             False
@@ -245,8 +254,8 @@ view model =
         ]
 
 
-viewButton : Selected -> Set Int ->  CardFace-> Int -> Int -> Html Msg
-viewButton selected guessed cardFace idx v  =
+viewButton : Selected -> Set Int -> CardFace -> Int -> Int -> Html Msg
+viewButton selected guessed cardFace idx v =
     div []
         [ div [ onClick (OpenCard idx) ]
             [ text
@@ -290,6 +299,22 @@ viewButton selected guessed cardFace idx v  =
             ]
         ]
 
-viewFace cardFace v = case cardFace of
-  IndexCardFace -> String.fromInt (valueFromId v)
-  StringCardFace -> Maybe.withDefault "BAD" (Array.get v (Array.fromList ["Poland","Warsaw","France","Paris","UK","London","Germany","Berlin"]))
+
+stringLists =
+    Dict.fromList
+        [ ( "Capitals", flattenToArray [ ( "Poland", "Warsaw" ), ( "France", "Paris" ), ( "UK", "London" ), ( "Germany", "Berlin" ) ] )
+        , ( "Spanish", flattenToArray [ ( "aqua", "water" ), ( "fuego", "flame" ), ( "hola", "hello" ), ( "si", "yes" ) ] )
+        ]
+
+flattenToArray: List (String,String) -> Array String
+flattenToArray listOfPairs = Array.fromList (List.concat (List.map (\(x,y)->[x,y]) listOfPairs))
+
+viewFace cardFace v =
+    case cardFace of
+        IndexCardFace ->
+            String.fromInt (valueFromId v)
+
+        StringCardFace stringList ->  case Dict.get stringList stringLists of
+           Just correctList ->Maybe.withDefault "BAD" (Array.get v correctList)
+           Nothing -> "--ERROR--"
+            -- Maybe.withDefault "BAD" (Array.get v (Array.fromList [ "Poland", "Warsaw", "France", "Paris", "UK", "London", "Germany", "Berlin" ]))

@@ -3,7 +3,7 @@ module Main exposing (main)
 import Array exposing (Array)
 import Browser
 import Html exposing (Html, a, button, div, input, p, pre, text)
-import Html.Attributes exposing (selected)
+import Html.Attributes exposing (selected, value)
 import Html.Events exposing (onClick, onInput)
 import Platform.Cmd exposing (Cmd)
 import Random
@@ -41,7 +41,13 @@ type alias Model =
     , match : Bool
     , allGuessed : Bool
     , score : Int
+    , cardFace: CardFace
     }
+
+
+type CardFace
+    = IndexCardFace
+    | StringCardFace
 
 
 defaultCardNumber =
@@ -59,8 +65,8 @@ init _ =
     )
 
 
-generateCards x =
-    List.concat (List.map (\y -> [ y, y ]) (List.range 0 (x - 1)))
+generateCards x =List.range 0 ((x*2) - 1)
+    -- List.concat (List.map (\y -> [ y, y ]) (List.range 0 (x - 1)))
 
 
 randomPicker : Int -> Random.Generator (List ( Int, Int ))
@@ -76,6 +82,7 @@ resetModel x =
     , selected = SelectedNone
     , allGuessed = False
     , score = 0
+    , cardFace = StringCardFace
     }
 
 
@@ -93,7 +100,7 @@ shuffle : List ( Int, Int ) -> Array x -> Array x
 shuffle s a =
     List.foldl swapIndexes a s
 
-
+valueFromId x = x // 2
 
 -- UPDATE
 
@@ -144,7 +151,7 @@ update msg model =
                                             False
 
                                         Just second ->
-                                            first == second
+                                          valueFromId  first == valueFromId second
 
                         _ ->
                             False
@@ -207,7 +214,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ p [] [ text ("Score: " ++ String.fromInt model.score) ]
-        , div [] (Array.indexedMap (viewButton model.selected model.guessed) model.cards |> Array.toList)
+        , div [] (Array.indexedMap (viewButton model.selected model.guessed model.cardFace) model.cards |> Array.toList)
         , p []
             [ text
                 (if model.match then
@@ -238,33 +245,51 @@ view model =
         ]
 
 
-viewButton : Selected -> Set Int -> Int -> Int -> Html Msg
-viewButton selected guessed idx v =
+viewButton : Selected -> Set Int ->  CardFace-> Int -> Int -> Html Msg
+viewButton selected guessed cardFace idx v  =
     div []
-        [ button [ onClick (OpenCard idx) ]
+        [ div [ onClick (OpenCard idx) ]
             [ text
                 (if Set.member idx guessed then
-                    if debug==False then " " else  ("+ "++String.fromInt v)
+                    if debug == False then
+                        " "
+
+                    else
+                        "+ " ++ viewFace cardFace v
 
                  else
                     case selected of
                         SelectedNone ->
-                            if debug==False then "X" else  ("- "++String.fromInt v)
+                            if debug == False then
+                                "X"
+
+                            else
+                                "- " ++ viewFace cardFace v
 
                         --    String.fromInt v -- to debug
                         SelectedOne x ->
                             if x == idx then
-                                String.fromInt v
+                                viewFace cardFace v
+
+                            else if debug == False then
+                                "X"
 
                             else
-                                if debug==False then "X" else  ("- "++String.fromInt v)
+                                "- " ++ viewFace cardFace v
 
                         SelectedTwo x y ->
                             if x == idx || y == idx then
-                                String.fromInt v
+                                viewFace cardFace v
+
+                            else if debug == False then
+                                "X"
 
                             else
-                                 if debug==False then "X" else  ("- "++String.fromInt v)
+                                "- " ++ viewFace cardFace v
                 )
             ]
         ]
+
+viewFace cardFace v = case cardFace of
+  IndexCardFace -> String.fromInt (valueFromId v)
+  StringCardFace -> Maybe.withDefault "BAD" (Array.get v (Array.fromList ["Poland","Warsaw","France","Paris","UK","London","Germany","Berlin"]))

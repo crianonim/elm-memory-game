@@ -2,13 +2,12 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, a, button, div, p, pre, text,input)
+import Html exposing (Html, a, button, div, input, p, pre, text)
 import Html.Attributes exposing (selected)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Platform.Cmd exposing (Cmd)
 import Random
 import Set exposing (Set)
-import Html.Events exposing (onInput)
 
 
 
@@ -47,6 +46,10 @@ type alias Model =
 
 defaultCardNumber =
     3
+
+
+debug =
+    True
 
 
 init : () -> ( Model, Cmd Msg )
@@ -178,11 +181,15 @@ update msg model =
         GotRandom y ->
             ( { model | cards = shuffle y (Array.fromList (generateCards model.cardsNumber)) }, Cmd.none )
 
-        ChangeNumber s-> case String.toInt s of
-          Just n ->  ( resetModel n, Random.generate GotRandom (randomPicker n) )
-          Nothing -> (model,Cmd.none)
-         
-            
+        ChangeNumber s ->
+            case String.toInt s of
+                Just n ->
+                    ( resetModel n, Random.generate GotRandom (randomPicker n) )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+
 
 -- SUBSCRIPTIONS
 
@@ -222,9 +229,12 @@ view model =
         , button [ onClick Reset ]
             [ text "Start Again!"
             ]
-        , input [Html.Attributes.value (String.fromInt (model.cardsNumber))
-        ,onInput ChangeNumber
-        ,Html.Attributes.type_ "number"] []
+        , input
+            [ Html.Attributes.value (String.fromInt model.cardsNumber)
+            , onInput ChangeNumber
+            , Html.Attributes.type_ "number"
+            ]
+            []
         ]
 
 
@@ -234,12 +244,12 @@ viewButton selected guessed idx v =
         [ button [ onClick (OpenCard idx) ]
             [ text
                 (if Set.member idx guessed then
-                    " "
+                    if debug==False then " " else  ("+ "++String.fromInt v)
 
                  else
                     case selected of
                         SelectedNone ->
-                            "X"
+                            if debug==False then "X" else  ("- "++String.fromInt v)
 
                         --    String.fromInt v -- to debug
                         SelectedOne x ->
@@ -247,14 +257,14 @@ viewButton selected guessed idx v =
                                 String.fromInt v
 
                             else
-                                "X"
+                                if debug==False then "X" else  ("- "++String.fromInt v)
 
                         SelectedTwo x y ->
                             if x == idx || y == idx then
                                 String.fromInt v
 
                             else
-                                "X"
+                                 if debug==False then "X" else  ("- "++String.fromInt v)
                 )
             ]
         ]

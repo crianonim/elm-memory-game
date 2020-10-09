@@ -2,12 +2,13 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, a, button, div, p, pre, text)
+import Html exposing (Html, a, button, div, p, pre, text,input)
 import Html.Attributes exposing (selected)
 import Html.Events exposing (onClick)
 import Platform.Cmd exposing (Cmd)
 import Random
 import Set exposing (Set)
+import Html.Events exposing (onInput)
 
 
 
@@ -99,6 +100,7 @@ type Msg
     | CheckCards
     | Reset
     | GotRandom (List ( Int, Int ))
+    | ChangeNumber String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -176,7 +178,11 @@ update msg model =
         GotRandom y ->
             ( { model | cards = shuffle y (Array.fromList (generateCards model.cardsNumber)) }, Cmd.none )
 
-
+        ChangeNumber s-> case String.toInt s of
+          Just n ->  ( resetModel n, Random.generate GotRandom (randomPicker n) )
+          Nothing -> (model,Cmd.none)
+         
+            
 
 -- SUBSCRIPTIONS
 
@@ -216,6 +222,9 @@ view model =
         , button [ onClick Reset ]
             [ text "Start Again!"
             ]
+        , input [Html.Attributes.value (String.fromInt (model.cardsNumber))
+        ,onInput ChangeNumber
+        ,Html.Attributes.type_ "number"] []
         ]
 
 
